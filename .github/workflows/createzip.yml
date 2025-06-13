@@ -1,0 +1,36 @@
+name: Create ZIP for GitHub Pages
+
+on:
+  workflow_dispatch:  # Allows manual runs
+
+jobs:
+  zip-and-upload:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v3
+
+      - name: 🧰 Create build structure
+        run: |
+          mkdir -p build/files
+          cp -r files/* build/files/ || true
+          mkdir -p build/FileHelpect
+          cp generate_zip.py build/FileHelpect/ || true
+          cp FileDownloadApp.java build/FileHelpect/ || true
+          cp malicious_file_detector.c build/FileHelpect/ || true
+          cp README.md NOTICE build/FileHelpect/ || true
+          cp README.md NOTICE.txt build/FileHelpect/ || true
+
+      - name: 📦 Zip files
+        run: |
+          cd build
+          zip -r downloadable_files.zip files FileHelpect
+          mv downloadable_files.zip ../docs/
+
+      - name: 📤 Commit ZIP to docs folder
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add docs/downloadable_files.zip
+          git commit -m "Add downloadable_files.zip"
+          git push
