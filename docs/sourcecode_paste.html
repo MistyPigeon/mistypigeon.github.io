@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>FileHelpect – Full Source Code</title>
+  <style>
+    body {
+      font-family: monospace;
+      background-color: #fdfdfd;
+      padding: 2rem;
+      max-width: 1000px;
+      margin: auto;
+    }
+    h1, h2 {
+      color: #2b6cb0;
+    }
+    pre {
+      background-color: #f4f4f4;
+      padding: 1rem;
+      overflow-x: auto;
+      border-radius: 6px;
+      border: 1px solid #ddd;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+    nav {
+      margin-bottom: 2rem;
+    }
+    nav a {
+      margin-right: 1rem;
+      color: #2b6cb0;
+      text-decoration: none;
+    }
+    nav a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>📂 FileHelpect – Full Source Code</h1>
+
+  <nav>
+    <strong>Jump to:</strong>
+    <a href="#python">generate_zip.py</a>
+    <a href="#java">FileDownloadApp.java</a>
+    <a href="#c">malicious_file_detector.c</a>
+  </nav>
+
+  <h2 id="python">🐍 generate_zip.py</h2>
+  <pre>
+import os
+import zipfile
+
+def create_zip(output_filename, source_dir):
+    with zipfile.ZipFile(output_filename, 'w') as zipf:
+        for root, dirs, files in os.walk(source_dir):
+            for file in files:
+                filepath = os.path.join(root, file)
+                arcname = os.path.relpath(filepath, source_dir)
+                zipf.write(filepath, arcname)
+
+if __name__ == "__main__":
+    output_zip = "downloadable_files.zip"
+    source_directory = "files"
+
+    # Ensure the source directory exists
+    if not os.path.exists(source_directory):
+        print(f"Source directory '{source_directory}' does not exist.")
+    else:
+        create_zip(output_zip, source_directory)
+        print(f"Created {output_zip} containing files from '{source_directory}'.")
+  </pre>
+
+  <h2 id="java">☕ FileDownloadApp.java</h2>
+  <pre>
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.*;
+import java.net.InetSocketAddress;
+import java.nio.file.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
+import com.sun.net.httpserver.HttpServer;
+import com.sun.net.httpserver.HttpHandler;
+import com.sun.net.httpserver.HttpExchange;
+
+public class FileDownloadApp {
+    private JFrame frame;
+    private DefaultListModel&lt;String&gt; fileListModel;
+    private List&lt;File&gt; filesToZip;
+    private File outputZipFile;
+
+    public FileDownloadApp() {
+        filesToZip = new ArrayList&lt;&gt;();
+        setupGUI();
+    }
+
+    private void setupGUI() {
+        frame = new JFrame("File Download Utility");
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setSize(500, 400);
+        frame.setLayout(new BorderLayout());
+
+        // File list
+        fileListModel = new DefaultListModel&lt;&gt;();
+        JList&lt;String&gt; fileList = new JList&lt;&gt;(fileListModel);
+        JScrollPane scrollPane = new JScrollPane(fileList);
+        frame.add(scrollPane, BorderLayout.CENTER);
+
+        // Buttons
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.setLayout(new FlowLayout());
+
+        JButton addButton = new JButton("Add File");
+        addButton.addActionListener(new AddFileAction());
+        buttonPanel.add(addButton);
+
+        JButton createZipButton = new JButton("Create ZIP");
+        createZipButton.addActionListener(new CreateZipAction());
+        buttonPanel.add(createZipButton);
+
+        JButton startServerButton = new JButton("Start Server");
+        startServerButton.addActionListener(new StartServerAction());
+        buttonPanel.add(startServerButton);
+
+        frame.add(buttonPanel, BorderLayout.SOUTH);
+        frame.setVisible(true);
+    }
+
+    // Action to add files
+    private class AddFileAction implements ActionListener {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            JFileChooser fileChooser = new JFileChooser();
+            fileChooser.setMultiSelectionEnabled(true);
+            int result = fileChooser.showOpenDialog(frame);
+            if (result == JFileChooser.APPROVE_OPTION) {
+                File[] selectedFiles = fileChooser.getSelectedFiles();
+                for (File file : selectedFiles) {
+                    filesToZip.add(file);
+                    fileListModel.addElement(file.getAbsolutePath());
+                }
+            }
+        }
+    }
+
+    // Action to create ZIP file
+    private class CreateZipAction implements ActionListener {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            if (filesToZip.isEmpty()) {
+                JOptionPane.showMessageDialog(frame, "No files selected to zip!", "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            JFileChooser fileChooser = new JFileChooser();
+            fileChooser.setDialogTitle("Save ZIP File");
+            fileChooser.setSelectedFile(new File("downloadable_files.zip"));
+            int result = fileChooser.showSaveDialog(frame);
+            if (result == JFileChooser.APPROVE_OPTION) {
+                outputZipFile = fileChooser.getSelectedFile();
+                try (ZipOutputStream zipOut = new ZipOutputStream(new FileOutputStream(outputZipFile))) {
+                    for (File file : filesToZip) {
+                        try (FileInputStream fis = new FileInputStream(file)) {
+                            ZipEntry zipEntry = new ZipEntry(file.getName());
+                            zipOut.putNextEntry(zipEntry);
+
+                            byte[] buffer = new byte[1024];
+                            int length;
+                            while ((length = fis.read(buffer)) >= 0) {
+                                zipOut.write(buffer, 0, length);
+                            }
+                        }
+                    }
+                    JOptionPane.showMessageDialog(frame, "ZIP file created successfully: " + outputZipFile.getAbsolutePath());
+                } catch (IOException ex) {
+                    JOptionPane.showMessageDialog(frame, "Error creating ZIP file: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        }
+    }
+
+    // Action to start HTTP server
+    private class StartServerAction implements ActionListener {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            if (outputZipFile == null || !outputZipFile.exists()) {
+                JOptionPane.showMessageDialog(frame, "No ZIP file found to serve! Please create one first.", "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            try {
+                HttpServer server = HttpServer.create(new InetSocketAddress(8000), 0);
+                server.createContext("/", new FileHandler(outputZipFile));
+                server.setExecutor(null); // default executor
+                server.start();
+                JOptionPane.showMessageDialog(frame, "Server started at http://localhost:8000\nPress Ctrl+C in terminal to stop.");
+                System.out.println("Serving file: " + outputZipFile.getAbsolutePath());
+            } catch (IOException ex) {
+                JOptionPane.showMessageDialog(frame, "Error starting server: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
+
+    // HTTP Handler to serve the ZIP file
+    private static class FileHandler implements HttpHandler {
+        private final File file;
+
+        public FileHandler(File file) {
+            this.file = file;
+        }
+
+        @Override
+        public void handle(HttpExchange exchange) throws IOException {
+            byte[] fileBytes = Files.readAllBytes(file.toPath());
+            exchange.getResponseHeaders().add("Content-Disposition", "attachment; filename=\"" + file.getName() + "\"");
+            exchange.sendResponseHeaders(200, fileBytes.length);
+            OutputStream os = exchange.getResponseBody();
+            os.write(fileBytes);
+            os.close();
+        }
+    }
+
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(FileDownloadApp::new);
+    }
+}
+  </pre>
+
+  <h2 id="c">🔒 malicious_file_detector.c</h2>
+  <pre>
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;string.h&gt;
+
+#define MAX_LINE_LENGTH 1024
+#define MAX_SIGNATURES 10
+
+const char *malicious_signatures[MAX_SIGNATURES] = {
+    "eval(",
+    "system(",
+    "exec(",
+    "rm -rf",
+    "wget",
+    "curl",
+    "base64_decode(",
+    "&lt;script&gt;",
+    "&lt;?php",
+    "DROP TABLE"
+};
+
+int scan_file(const char *filename) {
+    FILE *file = fopen(filename, "r");
+    if (!file) {
+        perror("Error opening file");
+        return -1;
+    }
+
+    char line[MAX_LINE_LENGTH];
+    int line_number = 0;
+    int found_malicious = 0;
+
+    printf("Scanning file: %s\n", filename);
+
+    while (fgets(line, MAX_LINE_LENGTH, file)) {
+        line_number++;
+        for (int i = 0; i &lt; MAX_SIGNATURES; i++) {
+            if (strstr(line, malicious_signatures[i])) {
+                printf("Malicious pattern found: '%s' on line %d\n", malicious_signatures[i], line_number);
+                found_malicious = 1;
+            }
+        }
+    }
+
+    fclose(file);
+
+    if (found_malicious) {
+        printf("Malicious content detected in the file.\n");
+    } else {
+        printf("No malicious content detected in the file.\n");
+    }
+
+    return found_malicious;
+}
+
+int main(int argc, char *argv[]) {
+    if (argc &lt; 2) {
+        printf("Usage: %s &lt;file_to_scan&gt;\n", argv[0]);
+        return 1;
+    }
+
+    const char *file_to_scan = argv[1];
+    int result = scan_file(file_to_scan);
+
+    if (result == -1) {
+        printf("An error occurred while scanning the file.\n");
+        return 1;
+    }
+
+    if (result == 1) {
+        printf("Warning: The file contains malicious content!\n");
+    } else {
+        printf("The file is clean.\n");
+    }
+
+    return 0;
+}
+  </pre>
+
+</body>
+</html>
