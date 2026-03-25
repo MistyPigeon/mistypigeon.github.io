@@ -11,28 +11,75 @@
             background-color: #301934; 
             color: #000000; 
             padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
         }
 
-    .button-section {
-            margin-top: 40px;
+
+        #captcha-gate {
+            background: #48264d;
+            padding: 30px;
+            border: 2px solid #000000;
+            border-radius: 8px;
+            text-align: center;
+            margin-top: 50px;
         }
+
+        .captcha-input {
+            padding: 10px;
+            font-size: 18px;
+            width: 80px;
+            border: 1px solid #000000;
+            margin-bottom: 15px;
+        }
+
+
+        #main-content {
+            display: none;
+            width: 100%;
+            max-width: 800px;
+        }
+
 
         .story-button {
             display: inline-block;
             padding: 12px 24px;
-            background-color: #301934; /* Dark purple inside */
-            color: #000000;            /* Black text */
-            border: 2px solid #000000; /* Black outline */
+            background-color: #301934; 
+            color: #000000;            
+            border: 2px solid #000000; 
             text-decoration: none;
             font-weight: bold;
             border-radius: 4px;
-            transition: opacity 0.2s;
+            margin-top: 20px;
         }
 
-        .story-button:hover {
-            opacity: 0.8;
+        .verify-btn {
+            background-color: #ffffff;
+            color: #301934;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-weight: bold;
+            border-radius: 4px;
         }
-        
+    </style>
+</head>
+
+<body>
+
+    <div id="captcha-gate">
+        <h2>Human Verification</h2>
+        <p>To access MistyPigeon's site, please solve:</p>
+        <p><strong>12 + 8 = ?</strong></p>
+        <input type="number" id="captcha-answer" class="captcha-input">
+        <br>
+        <button class="verify-btn" onclick="checkCaptcha()">Verify</button>
+        <p id="error-msg" style="color: #ff6b6b; font-size: 16px; display: none;">Incorrect. Please try again.</p>
+    </div>
+
+    <div id="main-content">
     </style>
 </head>
 
